@@ -212,7 +212,8 @@ export default function HomePage() {
       {!user ? (
         <LoginGate
           onLoginClick={() => {
-            window.location.href = '/api/auth/login';
+            const originParam = typeof window !== 'undefined' ? `?origin=${encodeURIComponent(window.location.origin)}` : '';
+            window.location.href = `/api/auth/login${originParam}`;
           }}
           onSelectDemoRole={(role) => handleSwitchRole(role)}
           status={status}

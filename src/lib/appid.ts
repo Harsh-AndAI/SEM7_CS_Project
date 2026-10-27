@@ -10,13 +10,34 @@ export function isAppIdConfigured(): boolean {
 
 export function getAppOrigin(request?: {
   headers?: { get: (name: string) => string | null };
-  nextUrl?: { origin?: string };
+  nextUrl?: { origin?: string; searchParams?: URLSearchParams };
 }): string {
+  // 1. Explicit query param (if frontend passes origin)
+  if (request?.nextUrl?.searchParams) {
+    const queryOrigin = request.nextUrl.searchParams.get('origin');
+    if (queryOrigin && !queryOrigin.includes('localhost') && !queryOrigin.includes('127.0.0.1')) {
+      return queryOrigin.replace(/\/$/, '');
+    }
+  }
+
+  // 2. Explicit environment variable configured in Coolify
   if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
   }
 
+  // 3. Referer header from user's actual browser
   if (request?.headers) {
+    const referer = request.headers.get('referer');
+    if (referer) {
+      try {
+        const refUrl = new URL(referer);
+        if (!refUrl.hostname.includes('localhost') && !refUrl.hostname.includes('127.0.0.1')) {
+          return refUrl.origin;
+        }
+      } catch {}
+    }
+
+    // 4. Reverse proxy forwarded headers (Traefik / Coolify)
     const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
     if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
       const proto = request.headers.get('x-forwarded-proto') || 'https';

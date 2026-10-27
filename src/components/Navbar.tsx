@@ -285,9 +285,12 @@ export default function Navbar({
 
                   <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '10px 0' }} />
 
-                  {/* IBM App ID Direct Login Link */}
                   <a
                     href="/api/auth/login"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = `/api/auth/login?origin=${encodeURIComponent(window.location.origin)}`;
+                    }}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -461,6 +464,10 @@ export default function Navbar({
               {/* Live IBM App ID Login Button */}
               <a
                 href="/api/auth/login"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `/api/auth/login?origin=${encodeURIComponent(window.location.origin)}`;
+                }}
                 className="btn-primary"
                 style={{ fontSize: '0.82rem', padding: '8px 16px' }}
               >
