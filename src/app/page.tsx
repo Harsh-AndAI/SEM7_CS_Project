@@ -52,7 +52,7 @@ export default function HomePage() {
   // Fetch Session (starts logged out unless user explicitly logs in)
   const fetchUser = useCallback(async () => {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { cache: 'no-store' });
       const data = await res.json();
       if (data.authenticated && data.user) {
         setUser(data.user);

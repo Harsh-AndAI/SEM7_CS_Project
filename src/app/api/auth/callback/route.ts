@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeAppIdCode, fetchAppIdUserInfo, getAppOrigin } from '@/lib/appid';
-import { setSessionCookie } from '@/lib/session';
+import { signSessionToken, getCookieOptions, COOKIE_NAME } from '@/lib/session';
 import { UserSession } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
@@ -28,8 +28,12 @@ export async function GET(request: NextRequest) {
       accessToken: tokens.access_token,
     };
 
-    await setSessionCookie(userSession);
-    return NextResponse.redirect(`${origin}/?auth_success=true`);
+    const isHttps = origin.startsWith('https://');
+    const token = await signSessionToken(userSession);
+
+    const response = NextResponse.redirect(`${origin}/?auth_success=true`);
+    response.cookies.set(COOKIE_NAME, token, getCookieOptions(isHttps));
+    return response;
   } catch (err) {
     console.error('Failed to process IBM App ID callback:', err);
     return NextResponse.redirect(`${origin}/?error=auth_exchange_failed`);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DEMO_USERS } from '@/lib/appid';
-import { setSessionCookie } from '@/lib/session';
+import { signSessionToken, getCookieOptions, COOKIE_NAME } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,13 +8,16 @@ export async function POST(request: NextRequest) {
     const role = (body.role || 'admin') as string;
 
     const user = DEMO_USERS[role] || DEMO_USERS.admin;
-    await setSessionCookie(user);
+    const isHttps = request.headers.get('x-forwarded-proto') === 'https' || request.nextUrl.protocol === 'https:';
+    const token = await signSessionToken(user);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user,
       message: `Signed in as ${user.name} (${user.role}) via simulation mode`,
     });
+    response.cookies.set(COOKIE_NAME, token, getCookieOptions(isHttps));
+    return response;
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }

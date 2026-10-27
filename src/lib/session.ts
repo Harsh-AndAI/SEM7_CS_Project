@@ -6,7 +6,17 @@ const SECRET_KEY = new TextEncoder().encode(
   process.env.SESSION_SECRET || 'ibm-cloud-vault-super-secure-default-session-key-32chars'
 );
 
-const COOKIE_NAME = 'cloud_vault_session';
+export const COOKIE_NAME = 'cloud_vault_session';
+
+export function getCookieOptions(isHttps: boolean = false) {
+  return {
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: 'lax' as const,
+    path: '/',
+    maxAge: 60 * 60 * 24, // 24 hours
+  };
+}
 
 export async function signSessionToken(payload: UserSession): Promise<string> {
   return await new SignJWT({ ...payload })
@@ -32,16 +42,10 @@ export async function getSession(): Promise<UserSession | null> {
   return await verifySessionToken(token);
 }
 
-export async function setSessionCookie(session: UserSession): Promise<void> {
+export async function setSessionCookie(session: UserSession, isHttps: boolean = false): Promise<void> {
   const token = await signSessionToken(session);
   const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
+  cookieStore.set(COOKIE_NAME, token, getCookieOptions(isHttps));
 }
 
 export async function clearSessionCookie(): Promise<void> {
