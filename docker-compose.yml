@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  cloud-vault:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cloud-vault-app:v1
+    container_name: cloud-secure-vault
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - SESSION_SECRET=docker_compose_super_secure_session_key_32chars
+      - IBM_APPID_CLIENT_ID=${IBM_APPID_CLIENT_ID:-}
+      - IBM_APPID_SECRET=${IBM_APPID_SECRET:-}
+      - IBM_APPID_TENANT_ID=${IBM_APPID_TENANT_ID:-}
+      - IBM_APPID_OAUTH_SERVER_URL=${IBM_APPID_OAUTH_SERVER_URL:-}
+      - IBM_CLOUDANT_APIKEY=${IBM_CLOUDANT_APIKEY:-}
+      - IBM_CLOUDANT_URL=${IBM_CLOUDANT_URL:-}
+      - IBM_CLOUDANT_DATABASE=${IBM_CLOUDANT_DATABASE:-cloud_vault_records}
+      - DEMO_MODE=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

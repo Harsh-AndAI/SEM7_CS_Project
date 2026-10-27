@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-vault-config
+  namespace: cloud-vault
+  labels:
+    app.kubernetes.io/name: cloud-vault
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  NEXT_PUBLIC_APP_URL: "http://localhost:30080"
+  IBM_APPID_REGION: "au-syd"
+  IBM_CLOUDANT_DATABASE: "cloud_vault_records"
+  DEMO_MODE: "true"
+  K8S_NAMESPACE: "cloud-vault"
+  K8S_NODE_NAME: "minikube-worker"

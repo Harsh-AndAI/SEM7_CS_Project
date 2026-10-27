@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: cloud-vault-network-policy
+  namespace: cloud-vault
+  labels:
+    app.kubernetes.io/name: cloud-vault
+    security.policy: zero-trust
+spec:
+  podSelector:
+    matchLabels:
+      app: cloud-vault
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # 1. Ingress Rule: Allow HTTP traffic only to port 3000
+  ingress:
+    - from:
+        - namespaceSelector: {} # Allow ingress from ingress controllers or host
+      ports:
+        - protocol: TCP
+          port: 3000
+
+  # 2. Egress Rule: Strict Zero-Trust filtering
+  egress:
+    # Rule 2A: Allow DNS resolution to kube-dns / CoreDNS in kube-system
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Rule 2B: Allow outbound HTTPS to external cloud APIs (IBM Cloudant & IBM App ID)
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8      # Block unauthorized internal private VPC ranges
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
